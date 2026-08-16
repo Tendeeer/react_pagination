@@ -14,8 +14,8 @@ export const App: React.FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Однократно при монтировании: применяем параметры из URL к состоянию.
-  // Навигация browser back/forward после монтирования не поддерживается.
+  // Mount-only by design: applies URL params to state once on load.
+  // Browser back/forward navigation after mount is not supported.
   useEffect(() => {
     const page = searchParams.get('page');
     const perPageParam = searchParams.get('perPage');
@@ -36,8 +36,8 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Перезаписывает все query-параметры целиком — намеренно,
-    // других параметров, кроме page/perPage, приложение не использует.
+    // Intentionally overwrites all query params: the app doesn't
+    // use any params other than page/perPage.
     setSearchParams({ page: String(currentPage), perPage: String(perPage) });
   }, [currentPage, perPage, setSearchParams]);
 
