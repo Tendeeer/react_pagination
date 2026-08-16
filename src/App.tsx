@@ -6,6 +6,7 @@ import { Pagination } from './components/Pagination';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const items = getNumbers(1, 42).map(n => `Item ${n}`);
+const ALLOWED_PER_PAGE = [3, 5, 10, 20];
 
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -13,22 +14,30 @@ export const App: React.FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Однократно при монтировании: применяем параметры из URL к состоянию.
+  // Навигация browser back/forward после монтирования не поддерживается.
   useEffect(() => {
     const page = searchParams.get('page');
     const perPageParam = searchParams.get('perPage');
 
-    if (page) {
-      setCurrentPage(Number(page));
-    }
+    const parsedPerPage = Number(perPageParam);
+    const validPerPage = ALLOWED_PER_PAGE.includes(parsedPerPage)
+      ? parsedPerPage
+      : 5;
+    const totalPages = Math.ceil(items.length / validPerPage);
+    const parsedPage = Number(page);
+    const validPage = !Number.isNaN(parsedPage)
+      ? Math.min(Math.max(1, parsedPage), totalPages)
+      : 1;
 
-    if (perPageParam) {
-      setPerPage(Number(perPageParam));
-    }
+    setPerPage(validPerPage);
+    setCurrentPage(validPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    setSearchParams({ page: String(currentPage), perPage: String(perPage)})
-  }, [currentPage, perPage, searchParams]);
+    setSearchParams({ page: String(currentPage), perPage: String(perPage) });
+  }, [currentPage, perPage, setSearchParams]);
 
   const startItem = (currentPage - 1) * perPage + 1;
   const endItem = Math.min(currentPage * perPage, items.length);
@@ -48,15 +57,16 @@ export const App: React.FC = () => {
             id="perPageSelector"
             className="form-control"
             value={perPage}
-            onChange={(e) => {
+            onChange={e => {
               setPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
           >
-            <option value="3">3</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
+            {ALLOWED_PER_PAGE.map(value => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -69,15 +79,17 @@ export const App: React.FC = () => {
         total={items.length}
         perPage={perPage}
         currentPage={currentPage}
-        onPageChange={(page) => setCurrentPage(page)}
+        onPageChange={page => setCurrentPage(page)}
       />
 
       <ul>
         {items
           .slice((currentPage - 1) * perPage, currentPage * perPage)
           .map((item, index) => (
-            <li key={index} data-cy="item">{item}</li>
-        ))}
+            <li key={index} data-cy="item">
+              {item}
+            </li>
+          ))}
       </ul>
     </div>
   );
