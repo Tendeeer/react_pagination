@@ -36,6 +36,8 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Перезаписывает все query-параметры целиком — намеренно,
+    // других параметров, кроме page/perPage, приложение не использует.
     setSearchParams({ page: String(currentPage), perPage: String(perPage) });
   }, [currentPage, perPage, setSearchParams]);
 
